@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 read -r -d '' HELP << EndOfHelp
 ------------------------------------------------------
 cdalias is a script which creates directory aliases 
