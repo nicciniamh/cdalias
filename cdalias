@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 read -r -d '' HELP << EndOfHelp
 ------------------------------------------------------
 cdalias is a script which creates directory aliases 
@@ -36,7 +36,11 @@ file pointed to by CDDICTFILE or \$HOME/.cdaliases if not
 
 .
 EndOfHelp
-
+declare -i _vlvl=${BASH_VERSINFO[0]}
+if [ $_vlvl -lt 4 ] ; then
+	builtin `echo ${0##*/} | tr \[:upper:] \[:lower:]` ${1+"$@"}
+	exit
+fi
 dictfile=${CDDICTFILE:="$HOME/.cdaliases"}
 declare -A cdict=(["____foo"]="bar")
 
@@ -56,7 +60,11 @@ else
 	while read -r key val ; do
 		key="${key%%\#*}"
 		val="${val%%\#*}"
-		[ -n "$key" ] && [ -n "$val" ] && cdict["$key"]="$val"
+		if [ -n "$key" ] ; then
+			if [ -n "$val" ] ; then
+				cdict["$key"]="$val"
+			fi
+		fi
 	done < $dictfile ## No sub-shell, so variables remain set. 
 fi
 unset cdict["____foo"]
@@ -107,5 +115,5 @@ for a in $@; do
 	echo "$a" | grep -q '^\$' && a="${x#?}"
 	cdargs="${cdargs} ${a}" 
 done
-echo "command ${cmd} ${cdargs}"
+echo "builtin cd \"${1+"$@"}\""
 
