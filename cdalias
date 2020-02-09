@@ -36,6 +36,11 @@ file pointed to by CDDICTFILE or \$HOME/.cdaliases if not
 
 .
 EndOfHelp
+we="${0##*/}"
+function error() { echo "${we}: ${@}" >&2; exit 1; }
+trap error ERR
+trap "set +x" EXIT
+#set -x
 declare -i _vlvl=${BASH_VERSINFO[0]}
 if [ $_vlvl -lt 4 ] ; then
 	builtin `echo ${0##*/} | tr \[:upper:] \[:lower:]` ${1+"$@"}
@@ -97,7 +102,7 @@ case "$1" in
 		cmd="popd"
 		shift
 		;;
-	"-list"| "--list")
+	"-L"| "--list")
 		(echo "Alias list:";
 		for a in ${!cdict[@]}; do
 			echo "    \"$a\" is an alias for \"${cdict[$a]}\""
@@ -109,11 +114,17 @@ case "$1" in
 		exit
 		;;
 esac
-
-for a in $@; do
-	[ -n "${cdict[$a]}" ] && a="${cdict[$a]}"
-	echo "$a" | grep -q '^\$' && a="${x#?}"
-	cdargs="${cdargs} ${a}" 
-done
-echo "builtin cd \"${1+"$@"}\""
+#
+# At this point there should be 0 or 1 argument.
+#
+if [ $# -eq 0 ] ; then
+	arg=~
+else
+	if [ -z "${cdict[$1]}" ] ; then
+		arg="$1"
+	else
+		arg="${cdict[$1]}"
+	fi
+fi
+echo "builtin $cmd \"$arg\""
 
