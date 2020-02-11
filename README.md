@@ -36,10 +36,9 @@ Additional options have been added to the cd command:
 ### Copy File
 Copy cdalias to a directory on your path. If you do not create an aliases dictionary, the two basic aliases will be used. Adding a new alias will write the dictionary. 
 
-To make this work within Bash create a global shell function in .bashrc or some other Bash startup, as:
+To make this work within BASH create a shell alias in .bashrc or some other Bash startup, as:
 
-	function cd() { eval $(~/bin/cdalias "$@"); } 
-	export -f cd
+	alias cd='source /path/to/script/cdalias'
 
  Once this is put in place, you may use cd as you always do with the additional benefit of being able to type **cd *alias* ** and get to the path pointed by *alias*
 
@@ -52,3 +51,7 @@ To make this work within Bash create a global shell function in .bashrc or some 
  New aliases are parsed using two methods. The first is a simple "alias definition" syntax where there are is not whitespace in the alias. The second is an alias name with spaces and the definition, separated by a colon. E.g.: 		
  	"some dir:/var/adm/some/long/dir/path/nobody/wants/to/type/out"
 
+## Alias File Details
+The CD command is very important and is essential for shell navigation. Because of this, it is important that this script start up with a minimal amount of overhead delay. Unfortunately, it IS run as an external command therefore it must read the alias file on each invocation. 
+
+The alias file is read by the script in such a way as to not invoke a sub-shell but do it's processing via I/O redirection and builtin parsing. 

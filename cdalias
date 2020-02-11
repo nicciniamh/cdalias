@@ -1,4 +1,23 @@
 #!/usr/bin/env bash
+## WARNING: This script is meant to be sourced, it might get weird otherwise.
+##
+we="${0##*/}"
+function doexit() {
+	if (( $# -gt 0 )) ; then
+		declare -i rc=$1
+	else
+		declare -i rc=$?
+	fi
+	return $rc
+}
+function cleanup() {
+	set +x
+}
+declare -i _vlvl=${BASH_VERSINFO[0]}
+if [ $_vlvl -lt 4 ] ; then
+	builtin `echo ${0##*/} | tr \[:upper:] \[:lower:]` ${1+"$@"}
+	doexit
+fi
 read -r -d '' HELP << EndOfHelp
 ------------------------------------------------------
 cdalias is a script which creates directory aliases 
@@ -13,8 +32,8 @@ file pointed to by CDDICTFILE or \$HOME/.cdaliases if not
  ignored entirely.
 
  Additional options have been added to the cd command:
-		-a alias definition or alias:definition
-			store new alias definition 
+		-a alias definition or -a alias:definition
+			   store new alias definition 
 		                      and exit  
 		-list  list the directory aliases and exit
 		-o     cd will act like popd, although directory 
@@ -37,16 +56,6 @@ file pointed to by CDDICTFILE or \$HOME/.cdaliases if not
 
 .
 EndOfHelp
-we="${0##*/}"
-function error() { echo "${we}: ${@}" >&2; exit 1; }
-trap error ERR
-trap "set +x" EXIT
-#set -x
-declare -i _vlvl=${BASH_VERSINFO[0]}
-if [ $_vlvl -lt 4 ] ; then
-	builtin `echo ${0##*/} | tr \[:upper:] \[:lower:]` ${1+"$@"}
-	exit
-fi
 dictfile=${CDDICTFILE:="$HOME/.cdaliases"}
 declare -A cdict=(["____foo"]="bar")
 
@@ -95,7 +104,7 @@ case "$1" in
 			rh="$@"			
 		else
 			echo "Usage: -a key value\nor\n-a \"key:value\"" >&2
-			exit 1
+			doexit 1
 		fi
 		set +x
 		echo "Created alias for \"$lh\" => \"$rh\"">&2
@@ -104,17 +113,17 @@ case "$1" in
 		#	printf "[%s]=%s\n" "$x" "${cdict[$x]}" >&2
 		#done
 		writealiases
-		exit 0
+		doexit 0
 		;;
 	"-r" | "--remove")
-		[ -z "$2" ] && { echo "Usage: cd -r <alias>" >&2; exit 1;}
+		[ -z "$2" ] && { echo "Usage: cd -r <alias>" >&2; doexit 1;}
 		if [ -n "${cdict["$2"]}" ] ; then
-			unset cdict["$2"] && { echo "Alias for $2 removed." >&2; writealiases; exit 0;}
+			unset cdict["$2"] && { echo "Alias for $2 removed." >&2; writealiases; doexit 0;}
 		else
 			echo "$2: not found" >&2;
-			exit 1;
+			doexit 1;
 		fi
-		exit;;
+		doexit;;
 	"-p" )
 		cmd="pushd"
 		shift
@@ -128,11 +137,11 @@ case "$1" in
 		for a in ${!cdict[@]}; do
 			echo "    \"$a\" is an alias for \"${cdict[$a]}\""
 		done) >&2
-		exit
+		doexit
 		;;
 	"-h" | "--help")
 		echo -e "This is help for cdalias. For help with the regular cd options use 'help cd'\n$HELP" >&2 
-		exit
+		doexit
 		;;
 esac
 #
@@ -147,5 +156,9 @@ else
 		arg="${cdict["$1"]}"
 	fi
 fi
-echo "builtin $cmd \"$arg\""
-
+if ((sourced)) ; then
+	builtin $cmd "$arg" 
+else
+	echo "builtin $cmd \"$arg\""
+fi
+cleanup
