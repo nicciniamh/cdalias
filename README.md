@@ -29,6 +29,8 @@ Additional options have been added to the cd command:
 		       then help on these options and exit
 
 ## Installation
+### This procedure is different from previous versions and the old method wont work.
+
 ### Requirements
 1. A *NIX operating system or other system that uses BASH.
 2. Bash version 4 or greater. 
